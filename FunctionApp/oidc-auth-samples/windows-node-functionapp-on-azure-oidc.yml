@@ -32,7 +32,7 @@ env:
   
 jobs:
   build:
-    runs-on: windows-latest # Assumes your target function app is Linux-based
+    runs-on: windows-latest # Assumes your target function app is Windows-based
     permissions:
       id-token: write  # Required for OIDC
       contents: read   # Required for actions/checkout
@@ -42,10 +42,10 @@ jobs:
         working-directory: ${{ env.AZURE_FUNCTIONAPP_PROJECT_PATH }}
     steps:
       - name: 'Checkout repository'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 'Set up Node version: ${{ env.NODE_VERSION }}'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
 
@@ -62,25 +62,25 @@ jobs:
         run: npm prune --production
       
       - name: 'Upload artifact for the deployment job'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.BUILD_ARTIFACT_NAME }}
           path: ${{ env.AZURE_FUNCTIONAPP_PROJECT_PATH }}
   
   deploy:
-    runs-on: windows-latest # Assumes your target function app is Linux-based
+    runs-on: windows-latest # Assumes your target function app is Windows-based
     needs: build
     permissions:
       id-token: write  # Required for OIDC
     steps:
       - name: 'Download artifact from build job'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: ${{ env.BUILD_ARTIFACT_NAME }}
-          path: ./downloaded-artifact
+          path: '${{ env.AZURE_FUNCTIONAPP_PROJECT_PATH }}/downloaded-artifact'
      
       - name: 'Log in to Azure with AZ CLI'
-        uses: azure/login@v2
+        uses: azure/login@v3
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
@@ -91,6 +91,6 @@ jobs:
         id: deploy-to-function-app
         with:
           app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
-          package: ./downloaded-artifact
+          package: '${{ env.AZURE_FUNCTIONAPP_PROJECT_PATH }}/downloaded-artifact'
 
 # For more samples to get started with GitHub Action workflows to deploy to Azure, refer to https://github.com/Azure/actions-workflow-samples
